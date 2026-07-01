@@ -9,6 +9,21 @@ function normalizeDescricao(descricao: string) {
   return descricao.trim();
 }
 
+export async function tituloJaExiste(descricao: string) {
+  const txDescricao = normalizeDescricao(descricao);
+
+  if (!txDescricao) {
+    return false;
+  }
+
+  const result = await pool.query(
+    'SELECT 1 FROM titulo WHERE LOWER(tx_descricao) = LOWER($1) LIMIT 1',
+    [txDescricao],
+  );
+
+  return (result.rowCount ?? 0) > 0;
+}
+
 export async function listTitulos() {
   const result = await pool.query<Titulo>('SELECT id_titulo, tx_descricao FROM titulo ORDER BY id_titulo');
   return result.rows;
@@ -24,6 +39,10 @@ export async function createTitulo(descricao: string) {
 
   if (!txDescricao) {
     throw new Error('A descrição do título é obrigatória.');
+  }
+
+  if (await tituloJaExiste(txDescricao)) {
+    throw new Error('O título já existe.');
   }
 
   const result = await pool.query<Titulo>('INSERT INTO titulo (tx_descricao) VALUES ($1) RETURNING id_titulo, tx_descricao', [txDescricao]);

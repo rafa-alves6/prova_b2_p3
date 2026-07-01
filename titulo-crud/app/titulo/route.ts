@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json(titulo, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro ao criar título.';
-    return NextResponse.json({ message }, { status: 400 });
+    const status = message === 'O título já existe.' ? 409 : 400;
+    return NextResponse.json({ message }, { status });
   }
 }
